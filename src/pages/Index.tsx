@@ -24,9 +24,34 @@ interface Character {
   world: string;
 }
 
+interface GameState {
+  playerHealth: number;
+  playerMaxHealth: number;
+  enemyHealth: number;
+  enemyMaxHealth: number;
+  enemyName: string;
+  playerAttack: number;
+  experience: number;
+  level: number;
+  gameLog: string[];
+  battleActive: boolean;
+}
+
 const Index = () => {
   const [completedQuests, setCompletedQuests] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState('main');
+  const [gameState, setGameState] = useState<GameState>({
+    playerHealth: 100,
+    playerMaxHealth: 100,
+    enemyHealth: 50,
+    enemyMaxHealth: 50,
+    enemyName: 'Абаасы',
+    playerAttack: 15,
+    experience: 0,
+    level: 1,
+    gameLog: ['Добро пожаловать в битву! Ты — Нюргун Боотур, защитник Среднего мира.'],
+    battleActive: false
+  });
 
   const quests: Quest[] = [
     {
