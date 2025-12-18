@@ -503,6 +503,127 @@ const Index = () => {
           </div>
         </div>
       )}
+
+      {activeQuest !== null && (() => {
+        const quest = quests.find(q => q.id === activeQuest);
+        if (!quest) return null;
+        const question = quest.questions[currentQuestion];
+        const isCorrect = selectedAnswer === question.correctAnswer;
+
+        return (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
+            <Card className="max-w-3xl w-full max-h-[90vh] overflow-y-auto border-2 border-primary/50 animate-scale-in">
+              <CardHeader>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <CardTitle className="text-2xl mb-2">{quest.title}</CardTitle>
+                    <CardDescription className="text-base">
+                      Вопрос {currentQuestion + 1} из {quest.questions.length}
+                    </CardDescription>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={closeQuest}>
+                    <Icon name="X" size={24} />
+                  </Button>
+                </div>
+                <Progress 
+                  value={((currentQuestion + 1) / quest.questions.length) * 100} 
+                  className="h-2 mt-4"
+                />
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                <div className="p-6 bg-muted/30 rounded-lg border border-border">
+                  <p className="text-lg font-medium leading-relaxed">{question.question}</p>
+                </div>
+
+                <div className="space-y-3">
+                  {question.options.map((option, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      onClick={() => handleAnswerSelect(index)}
+                      disabled={showExplanation}
+                      className={`w-full justify-start text-left h-auto py-4 px-6 text-base transition-all ${
+                        selectedAnswer === index
+                          ? showExplanation
+                            ? isCorrect
+                              ? 'border-green-500 bg-green-500/20 text-green-300'
+                              : 'border-red-500 bg-red-500/20 text-red-300'
+                            : 'border-primary bg-primary/20'
+                          : showExplanation && index === question.correctAnswer
+                          ? 'border-green-500 bg-green-500/20 text-green-300'
+                          : ''
+                      }`}
+                    >
+                      <span className="mr-3 font-bold">{String.fromCharCode(65 + index)}.</span>
+                      {option}
+                      {showExplanation && index === question.correctAnswer && (
+                        <Icon name="CheckCircle2" size={20} className="ml-auto text-green-500" />
+                      )}
+                      {showExplanation && selectedAnswer === index && !isCorrect && (
+                        <Icon name="XCircle" size={20} className="ml-auto text-red-500" />
+                      )}
+                    </Button>
+                  ))}
+                </div>
+
+                {showExplanation && (
+                  <div className={`p-6 rounded-lg border-2 animate-fade-in ${
+                    isCorrect 
+                      ? 'bg-green-500/10 border-green-500/30' 
+                      : 'bg-yellow-500/10 border-yellow-500/30'
+                  }`}>
+                    <div className="flex items-start gap-3 mb-3">
+                      <Icon 
+                        name={isCorrect ? 'CheckCircle2' : 'Info'} 
+                        size={24} 
+                        className={isCorrect ? 'text-green-500' : 'text-yellow-500'}
+                      />
+                      <h4 className="font-bold text-lg">
+                        {isCorrect ? 'Правильно!' : 'Интересный факт'}
+                      </h4>
+                    </div>
+                    <p className="text-muted-foreground leading-relaxed ml-9">
+                      {question.explanation}
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex gap-3">
+                  {!showExplanation ? (
+                    <Button 
+                      onClick={handleAnswerSubmit}
+                      disabled={selectedAnswer === null}
+                      className="w-full"
+                      size="lg"
+                    >
+                      Ответить
+                    </Button>
+                  ) : (
+                    <Button 
+                      onClick={handleNextQuestion}
+                      className="w-full"
+                      size="lg"
+                    >
+                      {currentQuestion < quest.questions.length - 1 ? 'Следующий вопрос' : 'Завершить квест'}
+                      <Icon name="ArrowRight" size={20} className="ml-2" />
+                    </Button>
+                  )}
+                </div>
+
+                {showExplanation && (
+                  <div className="text-center text-sm text-muted-foreground">
+                    Правильных ответов: {questProgress.length + (isCorrect ? 1 : 0)} из {quest.questions.length}
+                    {questProgress.length + (isCorrect ? 1 : 0) >= Math.ceil(quest.questions.length * 0.7) && (
+                      <p className="text-primary mt-2 font-medium">🎉 Вы получите награду за этот квест!</p>
+                    )}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        );
+      })()}
     </div>
   );
 };
