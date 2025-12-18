@@ -24,34 +24,23 @@ interface Character {
   world: string;
 }
 
-interface GameState {
-  playerHealth: number;
-  playerMaxHealth: number;
-  enemyHealth: number;
-  enemyMaxHealth: number;
-  enemyName: string;
-  playerAttack: number;
-  experience: number;
-  level: number;
-  gameLog: string[];
-  battleActive: boolean;
+interface QuestStep {
+  id: number;
+  text: string;
+  choices: {
+    text: string;
+    correct: boolean;
+    feedback: string;
+  }[];
 }
 
 const Index = () => {
   const [completedQuests, setCompletedQuests] = useState<number[]>([]);
   const [activeTab, setActiveTab] = useState('main');
-  const [gameState, setGameState] = useState<GameState>({
-    playerHealth: 100,
-    playerMaxHealth: 100,
-    enemyHealth: 50,
-    enemyMaxHealth: 50,
-    enemyName: 'Абаасы',
-    playerAttack: 15,
-    experience: 0,
-    level: 1,
-    gameLog: ['Добро пожаловать в битву! Ты — Нюргун Боотур, защитник Среднего мира.'],
-    battleActive: false
-  });
+  const [activeQuest, setActiveQuest] = useState<number | null>(null);
+  const [questStep, setQuestStep] = useState(0);
+  const [questScore, setQuestScore] = useState(0);
+  const [showFeedback, setShowFeedback] = useState<string>('');
 
   const quests: Quest[] = [
     {
@@ -87,6 +76,125 @@ const Index = () => {
       reward: 'Понимание борьбы добра и зла'
     }
   ];
+
+  const questSteps: Record<number, QuestStep[]> = {
+    1: [
+      {
+        id: 1,
+        text: 'Ты стоишь на пороге великого путешествия. Перед тобой открываются три дороги, ведущие в разные миры. Куда направишься сначала?',
+        choices: [
+          { text: 'В Верхний мир к божествам айыы', correct: true, feedback: 'Верно! Ты поднимаешься в небесные чертоги, где обитает Юрюнг Айыы Тойон.' },
+          { text: 'В Нижний мир к абаасы', correct: false, feedback: 'Опасно начинать с Нижнего мира! Лучше сначала познакомиться с добрыми божествами.' },
+          { text: 'Остаться в Среднем мире', correct: false, feedback: 'Средний мир твой дом, но для понимания вселенной нужно узнать все три мира.' }
+        ]
+      },
+      {
+        id: 2,
+        text: 'В Верхнем мире тебя встречает Юрюнг Айыы Тойон. Он спрашивает: "Что главное для богатыря Среднего мира?"',
+        choices: [
+          { text: 'Защищать свой народ от зла', correct: true, feedback: 'Мудрый ответ! Юрюнг Айыы благословляет тебя.' },
+          { text: 'Накопить богатство и славу', correct: false, feedback: 'Богатырь служит народу, а не себе.' },
+          { text: 'Победить всех врагов', correct: false, feedback: 'Сила важна, но мудрость и справедливость важнее.' }
+        ]
+      },
+      {
+        id: 3,
+        text: 'Теперь ты спускаешься в Средний мир. Здесь живут люди племени айыы аймага. Что делает этот мир особенным?',
+        choices: [
+          { text: 'Здесь рождаются и живут богатыри', correct: true, feedback: 'Точно! Средний мир — место героев и испытаний.' },
+          { text: 'Это самый безопасный мир', correct: false, feedback: 'Средний мир постоянно нуждается в защите от абаасы.' },
+          { text: 'Здесь нет места злу', correct: false, feedback: 'Зло пытается проникнуть сюда из Нижнего мира.' }
+        ]
+      }
+    ],
+    2: [
+      {
+        id: 1,
+        text: 'Злой дух абаасы появился на границе Среднего мира! Он угрожает мирным жителям. Как поступит Нюргун Боотур?',
+        choices: [
+          { text: 'Вызвать абаасы на честный поединок', correct: true, feedback: 'Храбрость! Ты выходишь на бой, следуя традициям богатырей.' },
+          { text: 'Попросить помощи у других', correct: false, feedback: 'Богатырь сам защищает свой народ.' },
+          { text: 'Спрятаться и ждать', correct: false, feedback: 'Это не путь героя!' }
+        ]
+      },
+      {
+        id: 2,
+        text: 'Битва началась! Абаасы нападает с яростью. Какое оружие богатыря самое важное?',
+        choices: [
+          { text: 'Сила духа и благородное сердце', correct: true, feedback: 'Верно! Физическая сила без духовной ничто.' },
+          { text: 'Острый меч', correct: false, feedback: 'Меч важен, но не главное оружие богатыря.' },
+          { text: 'Хитрость и обман', correct: false, feedback: 'Богатырь сражается честно!' }
+        ]
+      },
+      {
+        id: 3,
+        text: 'Абаасы повержен! Но он умоляет о пощаде. Что сделает Нюргун?',
+        choices: [
+          { text: 'Отправить в Нижний мир с предупреждением', correct: true, feedback: 'Мудро! Справедливость важнее мести.' },
+          { text: 'Уничтожить врага', correct: false, feedback: 'Богатырь не жесток без причины.' },
+          { text: 'Взять в плен навечно', correct: false, feedback: 'Баланс миров важнее личной победы.' }
+        ]
+      }
+    ],
+    3: [
+      {
+        id: 1,
+        text: 'Ты встречаешь прекрасную Туйаарыму Куо. Она задаёт загадку: "Что сильнее богатырской силы?"',
+        choices: [
+          { text: 'Любовь и верность', correct: true, feedback: 'Туйаарыма улыбается. Ты понял суть!' },
+          { text: 'Магия божеств', correct: false, feedback: 'Не совсем. Подумай о человеческих качествах.' },
+          { text: 'Ничто не сильнее', correct: false, feedback: 'Есть сила, которая двигает мирами.' }
+        ]
+      },
+      {
+        id: 2,
+        text: 'Туйаарыма рассказывает о своей мечте создать гармонию между мирами. Как ей помочь?',
+        choices: [
+          { text: 'Нести знания и мудрость людям', correct: true, feedback: 'Именно! Образование создаёт гармонию.' },
+          { text: 'Победить всех врагов силой', correct: false, feedback: 'Сила не создаёт гармонию.' },
+          { text: 'Закрыть границы миров', correct: false, feedback: 'Изоляция не решение.' }
+        ]
+      },
+      {
+        id: 3,
+        text: 'Туйаарыма дарит тебе амулет. Что он символизирует?',
+        choices: [
+          { text: 'Связь сердец и верность', correct: true, feedback: 'Да! Амулет хранит силу любви и преданности.' },
+          { text: 'Магическую защиту', correct: false, feedback: 'Это больше чем просто защита.' },
+          { text: 'Богатство и славу', correct: false, feedback: 'Туйаарыма ценит духовное, а не материальное.' }
+        ]
+      }
+    ],
+    4: [
+      {
+        id: 1,
+        text: 'Уот Усутаакы, могущественный абаасы, объявляет войну Среднему миру. Он предлагает решить всё одним боем. Согласишься?',
+        choices: [
+          { text: 'Да, чтобы защитить народ от войны', correct: true, feedback: 'Храбрость! Ты принимаешь вызов ради мира.' },
+          { text: 'Нет, собрать армию', correct: false, feedback: 'Война принесёт больше жертв.' },
+          { text: 'Попытаться договориться', correct: false, feedback: 'Уот Усутаакы не знает переговоров.' }
+        ]
+      },
+      {
+        id: 2,
+        text: 'В разгаре битвы Уот использует тёмную магию. Твоя сила слабеет. Что делать?',
+        choices: [
+          { text: 'Призвать силу света от айыы', correct: true, feedback: 'Свет побеждает тьму! Благословение айыы возвращает силы.' },
+          { text: 'Сражаться до конца несмотря ни на что', correct: false, feedback: 'Упорство важно, но мудрость нужнее.' },
+          { text: 'Отступить и вернуться позже', correct: false, feedback: 'Отступление обречёт народ.' }
+        ]
+      },
+      {
+        id: 3,
+        text: 'Уот Усутаакы повержен! Ты восстановил справедливость. Чему учит эта победа?',
+        choices: [
+          { text: 'Добро всегда побеждает зло', correct: true, feedback: 'Верно! Это главный урок Олонхо — торжество справедливости!' },
+          { text: 'Сила решает всё', correct: false, feedback: 'Победила не только сила, но и дух.' },
+          { text: 'Нужно уничтожить всё зло', correct: false, feedback: 'Баланс важнее уничтожения.' }
+        ]
+      }
+    ]
+  };
 
   const characters: Character[] = [
     {
@@ -126,10 +234,43 @@ const Index = () => {
     }
   ];
 
-  const completeQuest = (questId: number) => {
-    if (!completedQuests.includes(questId)) {
-      setCompletedQuests([...completedQuests, questId]);
+  const startQuest = (questId: number) => {
+    setActiveQuest(questId);
+    setQuestStep(0);
+    setQuestScore(0);
+    setShowFeedback('');
+    setActiveTab('game');
+  };
+
+  const handleChoice = (correct: boolean, feedback: string) => {
+    setShowFeedback(feedback);
+    if (correct) {
+      setQuestScore(questScore + 1);
     }
+    
+    setTimeout(() => {
+      if (activeQuest && questStep < questSteps[activeQuest].length - 1) {
+        setQuestStep(questStep + 1);
+        setShowFeedback('');
+      } else {
+        completeQuest();
+      }
+    }, 2500);
+  };
+
+  const completeQuest = () => {
+    if (activeQuest && !completedQuests.includes(activeQuest)) {
+      setCompletedQuests([...completedQuests, activeQuest]);
+    }
+    setActiveTab('questComplete');
+  };
+
+  const returnToQuests = () => {
+    setActiveQuest(null);
+    setQuestStep(0);
+    setQuestScore(0);
+    setShowFeedback('');
+    setActiveTab('quests');
   };
 
   const getDifficultyColor = (difficulty: string) => {
@@ -148,6 +289,9 @@ const Index = () => {
   };
 
   const progressPercentage = (completedQuests.length / quests.length) * 100;
+
+  const currentQuestData = activeQuest ? questSteps[activeQuest] : null;
+  const currentStep = currentQuestData ? currentQuestData[questStep] : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-card">
@@ -237,6 +381,95 @@ const Index = () => {
         </div>
       )}
 
+      {activeTab === 'game' && currentStep && (
+        <div className="container mx-auto px-4 py-12 animate-fade-in">
+          <div className="max-w-4xl mx-auto">
+            <div className="mb-6 flex items-center justify-between">
+              <Badge variant="outline" className="text-lg px-4 py-2">
+                Шаг {questStep + 1} из {currentQuestData?.length}
+              </Badge>
+              <Badge variant="outline" className="text-lg px-4 py-2">
+                <Icon name="Star" size={20} className="mr-2" />
+                Правильно: {questScore}
+              </Badge>
+            </div>
+
+            <Card className="border-2 border-primary/50 mb-6 bg-gradient-to-br from-primary/10 to-card">
+              <CardHeader>
+                <CardTitle className="text-2xl">{quests.find(q => q.id === activeQuest)?.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xl leading-relaxed mb-6">{currentStep.text}</p>
+
+                {showFeedback ? (
+                  <Card className={`border-2 ${showFeedback.includes('Верно') || showFeedback.includes('Точно') || showFeedback.includes('Мудро') || showFeedback.includes('Храбрость') || showFeedback.includes('Да!') ? 'border-green-500 bg-green-500/10' : 'border-yellow-500 bg-yellow-500/10'} animate-scale-in`}>
+                    <CardContent className="pt-6">
+                      <p className="text-lg">{showFeedback}</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-3">
+                    {currentStep.choices.map((choice, index) => (
+                      <Button
+                        key={index}
+                        onClick={() => handleChoice(choice.correct, choice.feedback)}
+                        className="w-full text-left justify-start h-auto py-4 px-6 text-lg"
+                        variant="outline"
+                      >
+                        {choice.text}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Progress value={((questStep + 1) / (currentQuestData?.length || 1)) * 100} className="h-2" />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'questComplete' && (
+        <div className="container mx-auto px-4 py-12 animate-fade-in">
+          <div className="max-w-2xl mx-auto text-center">
+            <div className="mb-8">
+              <Icon name="Trophy" size={80} className="text-primary mx-auto mb-4" />
+              <h2 className="text-4xl font-bold text-primary mb-4">Квест завершён!</h2>
+              <p className="text-xl text-muted-foreground mb-6">
+                Ты успешно прошел испытание и получил новые знания об эпосе Олонхо
+              </p>
+            </div>
+
+            <Card className="border-2 border-primary/50 mb-8">
+              <CardContent className="pt-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-lg">
+                    <span>Правильных ответов:</span>
+                    <Badge className="text-lg px-4 py-2">{questScore} из {currentQuestData?.length}</Badge>
+                  </div>
+                  <div className="flex items-center gap-2 text-primary">
+                    <Icon name="Gift" size={24} />
+                    <span className="text-lg">
+                      Награда: {quests.find(q => q.id === activeQuest)?.reward}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="flex gap-4 justify-center">
+              <Button size="lg" onClick={returnToQuests}>
+                <Icon name="ArrowLeft" size={20} className="mr-2" />
+                К списку квестов
+              </Button>
+              <Button size="lg" variant="outline" onClick={() => setActiveTab('main')}>
+                На главную
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {activeTab === 'quests' && (
         <div className="container mx-auto px-4 py-12 animate-fade-in">
           <Button 
@@ -277,7 +510,7 @@ const Index = () => {
                     <span>Награда: {quest.reward}</span>
                   </div>
                   <Button 
-                    onClick={() => completeQuest(quest.id)}
+                    onClick={() => startQuest(quest.id)}
                     disabled={quest.completed}
                     className="w-full"
                   >
@@ -503,127 +736,6 @@ const Index = () => {
           </div>
         </div>
       )}
-
-      {activeQuest !== null && (() => {
-        const quest = quests.find(q => q.id === activeQuest);
-        if (!quest) return null;
-        const question = quest.questions[currentQuestion];
-        const isCorrect = selectedAnswer === question.correctAnswer;
-
-        return (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in">
-            <Card className="max-w-3xl w-full max-h-[90vh] overflow-y-auto border-2 border-primary/50 animate-scale-in">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <CardTitle className="text-2xl mb-2">{quest.title}</CardTitle>
-                    <CardDescription className="text-base">
-                      Вопрос {currentQuestion + 1} из {quest.questions.length}
-                    </CardDescription>
-                  </div>
-                  <Button variant="ghost" size="icon" onClick={closeQuest}>
-                    <Icon name="X" size={24} />
-                  </Button>
-                </div>
-                <Progress 
-                  value={((currentQuestion + 1) / quest.questions.length) * 100} 
-                  className="h-2 mt-4"
-                />
-              </CardHeader>
-              
-              <CardContent className="space-y-6">
-                <div className="p-6 bg-muted/30 rounded-lg border border-border">
-                  <p className="text-lg font-medium leading-relaxed">{question.question}</p>
-                </div>
-
-                <div className="space-y-3">
-                  {question.options.map((option, index) => (
-                    <Button
-                      key={index}
-                      variant="outline"
-                      onClick={() => handleAnswerSelect(index)}
-                      disabled={showExplanation}
-                      className={`w-full justify-start text-left h-auto py-4 px-6 text-base transition-all ${
-                        selectedAnswer === index
-                          ? showExplanation
-                            ? isCorrect
-                              ? 'border-green-500 bg-green-500/20 text-green-300'
-                              : 'border-red-500 bg-red-500/20 text-red-300'
-                            : 'border-primary bg-primary/20'
-                          : showExplanation && index === question.correctAnswer
-                          ? 'border-green-500 bg-green-500/20 text-green-300'
-                          : ''
-                      }`}
-                    >
-                      <span className="mr-3 font-bold">{String.fromCharCode(65 + index)}.</span>
-                      {option}
-                      {showExplanation && index === question.correctAnswer && (
-                        <Icon name="CheckCircle2" size={20} className="ml-auto text-green-500" />
-                      )}
-                      {showExplanation && selectedAnswer === index && !isCorrect && (
-                        <Icon name="XCircle" size={20} className="ml-auto text-red-500" />
-                      )}
-                    </Button>
-                  ))}
-                </div>
-
-                {showExplanation && (
-                  <div className={`p-6 rounded-lg border-2 animate-fade-in ${
-                    isCorrect 
-                      ? 'bg-green-500/10 border-green-500/30' 
-                      : 'bg-yellow-500/10 border-yellow-500/30'
-                  }`}>
-                    <div className="flex items-start gap-3 mb-3">
-                      <Icon 
-                        name={isCorrect ? 'CheckCircle2' : 'Info'} 
-                        size={24} 
-                        className={isCorrect ? 'text-green-500' : 'text-yellow-500'}
-                      />
-                      <h4 className="font-bold text-lg">
-                        {isCorrect ? 'Правильно!' : 'Интересный факт'}
-                      </h4>
-                    </div>
-                    <p className="text-muted-foreground leading-relaxed ml-9">
-                      {question.explanation}
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex gap-3">
-                  {!showExplanation ? (
-                    <Button 
-                      onClick={handleAnswerSubmit}
-                      disabled={selectedAnswer === null}
-                      className="w-full"
-                      size="lg"
-                    >
-                      Ответить
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={handleNextQuestion}
-                      className="w-full"
-                      size="lg"
-                    >
-                      {currentQuestion < quest.questions.length - 1 ? 'Следующий вопрос' : 'Завершить квест'}
-                      <Icon name="ArrowRight" size={20} className="ml-2" />
-                    </Button>
-                  )}
-                </div>
-
-                {showExplanation && (
-                  <div className="text-center text-sm text-muted-foreground">
-                    Правильных ответов: {questProgress.length + (isCorrect ? 1 : 0)} из {quest.questions.length}
-                    {questProgress.length + (isCorrect ? 1 : 0) >= Math.ceil(quest.questions.length * 0.7) && (
-                      <p className="text-primary mt-2 font-medium">🎉 Вы получите награду за этот квест!</p>
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        );
-      })()}
     </div>
   );
 };
